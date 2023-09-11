@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
         invincibleTimer = 0;
         rbody = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        UImanager.instance.UpdateHealthBar(currentHealth, maxHealth);
     }
 
     public void changeHealth(int amount) {
@@ -34,6 +35,7 @@ public class PlayerController : MonoBehaviour
         invincibleTimer = invicinbleTime;
         //约束生命值
         currentHealth = Mathf.Clamp(currentHealth+amount, minHealth, maxHealth);
+        UImanager.instance.UpdateHealthBar(currentHealth, maxHealth);
         Debug.Log(currentHealth + "/" + maxHealth);
     }
     // Update is called once per frame

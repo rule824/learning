@@ -12,6 +12,7 @@ public class EnemyController : MonoBehaviour
     private Vector2 moveDirection;
     private Animator anim;
     private bool isFixed;
+    public ParticleSystem BrokenEffect;
     // Start is called before the first frame update
     void Start()
     {
@@ -50,6 +51,9 @@ public class EnemyController : MonoBehaviour
 
     public void Fixed() {
         isFixed = true;
+        if (BrokenEffect.isPlaying) {
+            BrokenEffect.Stop();
+        }
         rbody.simulated = false;
         anim.SetTrigger("Fix");
     }

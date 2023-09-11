@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Collectable : MonoBehaviour
 {
+    public ParticleSystem CollectEffect;
+    public AudioClip collectClip;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,7 +24,9 @@ public class Collectable : MonoBehaviour
             Debug.Log("玩家碰到草莓");
             if (pc.myCurrentHealth() < pc.myMaxHealth()) {
                 pc.changeHealth(1);
+                // Instantiate(CollectEffect, transform.position, Quaternion.identity);
                 Destroy(this.gameObject);
+                AudioManager.instance.AudioPlay(collectClip);
             }
         }    
     }
