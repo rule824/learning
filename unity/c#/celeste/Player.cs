@@ -10,6 +10,7 @@ namespace Celeste
     [Tracked]
     public class Player : Actor
     {
+        //常量
         #region Constants
 
         public static ParticleType P_DashA;
@@ -20,11 +21,14 @@ namespace Celeste
         public static ParticleType P_SummitLandB;
         public static ParticleType P_SummitLandC;
 
+
         public const float MaxFall = 160f;
         private const float Gravity = 900f;
+        //到达此阈值重力加速度减半吗？？？
         private const float HalfGravThreshold = 40f;
 
         private const float FastMaxFall = 240f;
+        //快速下落最大加速度？？？
         private const float FastMaxAccel = 300f;
 
         public const float MaxRun = 90f;
@@ -37,6 +41,7 @@ namespace Celeste
 
         private const float BounceAutoJumpTime = .1f;
 
+        //下蹲状态摩擦力
         private const float DuckFriction = 500f;
         private const int DuckCorrectCheck = 4;
         private const float DuckCorrectSlide = 50f;
@@ -99,6 +104,7 @@ namespace Celeste
         private const int DreamDashEndWiggle = 5;
         private const float DreamDashMinTime = .1f;
 
+        //规定攀爬操作体力以及消耗
         public const float ClimbMaxStamina = 110;
         private const float ClimbUpCost = 100 / 2.2f;
         private const float ClimbStillCost = 100 / 10f;
@@ -135,8 +141,29 @@ namespace Celeste
 
         private const float ChaserStateMaxTime = 4f;
 
+        //最常用
         public const float WalkSpeed = 64f;
 
+        // StNormal：正常状态，玩家在地面上行走或站立。
+        // StClimb：攀爬状态，玩家正在攀爬墙壁或其他可攀爬表面。
+        // StDash：冲刺状态，玩家正在执行冲刺动作，可能是以极快的速度前进。
+        // StSwim：游泳状态，玩家正在水中游泳。
+        // StBoost：加速状态，玩家可能正在进行某种加速或速度增加的动作。
+        // StRedDash：红色冲刺状态，可能是与 "Dash" 动作相关的特殊冲刺状态。
+        // StHitSquash：被击中状态，玩家受到攻击或碰撞后的受挤压状态。
+        // StLaunch：发射状态，玩家可能被发射到空中或其他地方。
+        // StPickup：拾取状态，玩家可能正在拾取或交互物品或对象。
+        // StDreamDash：梦幻冲刺状态，可能是与 "Dream Dash" 动作相关的特殊状态。
+        // StSummitLaunch：峰顶发射状态，可能与峰顶发射相关的特殊状态。
+        // StDummy：虚拟状态，可能是用于测试或虚拟状态的特殊标识。
+        // StIntroWalk、StIntroJump、StIntroRespawn 和 StIntroWakeUp：游戏引导或游戏开始时的不同状态。
+        // StBirdDashTutorial：与鸟类冲刺教程相关的状态。
+        // StFrozen：冻结状态，可能与冷冻或暂停相关的状态。
+        // StReflectionFall：反射坠落状态，可能与反射或反射坠落相关的状态。
+        // StStarFly：星星飞行状态，可能是与飞行或星星飞行相关的状态。
+        // StTempleFall：神庙坠落状态，可能与神庙或坠落相关的状态。
+        // StCassetteFly：卡带飞行状态，可能是与卡带或飞行相关的状态。
+        // StAttract：吸引状态，可能与吸引或吸引力相关的状态。
         public const int StNormal = 0;
         public const int StClimb = 1;
         public const int StDash = 2;
@@ -165,40 +192,57 @@ namespace Celeste
 
         #endregion
 
+        //变量
+        //头发和碰撞框为什么不在此处定义呢？？？
         #region Vars
 
         public Vector2 Speed;
+        //朝向
         public Facings Facing;
+        //精灵
         public PlayerSprite Sprite;
         public PlayerHair Hair;
         public StateMachine StateMachine;
+        //相机锚点
         public Vector2 CameraAnchor;
+        //是否忽略水平和垂直方向的运动
         public bool CameraAnchorIgnoreX;
         public bool CameraAnchorIgnoreY;
         public Vector2 CameraAnchorLerp;
+        //是否强制更新相机位置
         public bool ForceCameraUpdate;
         public Leader Leader;
         public VertexLight Light;
+        //可冲刺次数
         public int Dashes;
+        //体力
         public float Stamina = ClimbMaxStamina;
         public bool StrawberriesBlocked;
         public Vector2 PreviousPosition;
+        //是否播放角色动画
         public bool DummyAutoAnimate = true;
         public Vector2 ForceStrongWindHair;
+        //覆盖冲刺方向
         public Vector2? OverrideDashDirection;
         public bool FlipInReflection = false;
         public bool JustRespawned;  // True if the player hasn't moved since respawning
+        //只读属性，表示玩家是否死亡
         public bool Dead { get; private set; }
 
         private Level level;
         private Collision onCollideH;
         private Collision onCollideV;
         private bool onGround;
+        //上一帧是否在地面上
         private bool wasOnGround;
         private int moveX;
+        //闪烁效果
         private bool flash;
+        //是否蹲伏
         private bool wasDucking;
 
+        //闲置一段时间后播放动画？？？
+        //后面的浮点数表示选择的概率
         private float idleTimer;
         private static Chooser<string> idleColdOptions = new Chooser<string>().Add("idleA", 5f).Add("idleB", 3f).Add("idleC", 1f);
         private static Chooser<string> idleNoBackpackOptions = new Chooser<string>().Add("idleA", 1f).Add("idleB", 3f).Add("idleC", 3f);
@@ -233,6 +277,7 @@ namespace Celeste
         private float wallBoostTimer;   // If you climb jump and then do a sideways input within this timer, switch to wall jump
         private float maxFall;
         private float dashAttackTimer;
+        //追逐者的属性列表？？？
         private List<ChaserState> chaserStates;
         private bool wasTired;
         private HashSet<Trigger> triggersInside;
@@ -244,6 +289,7 @@ namespace Celeste
         private float dreamDashCanEndTimer;
         private Solid climbHopSolid;
         private Vector2 climbHopSolidPosition;
+        //声音
         private SoundSource wallSlideSfx;
         private SoundSource swimSurfaceLoopSfx;
         private float playFootstepOnLand;
@@ -260,6 +306,7 @@ namespace Celeste
         private List<ChaserStateSound> activeSounds = new List<ChaserStateSound>();
         private FMOD.Studio.EventInstance idleSfx;
 
+        //定义不同状态下的碰撞框
         private readonly Hitbox normalHitbox = new Hitbox(8, 11, -4, -11);
         private readonly Hitbox duckHitbox = new Hitbox(8, 6, -4, -6);
         private readonly Hitbox normalHurtbox = new Hitbox(8, 9, -4, -11);
@@ -276,6 +323,7 @@ namespace Celeste
         public static readonly Color NormalHairColor = Calc.HexToColor("AC3232");
         public static readonly Color FlyPowerHairColor = Calc.HexToColor("F2EB6D");
         public static readonly Color UsedHairColor = Calc.HexToColor("44B7FF");
+        //切换颜色时候的颜色和计时器吗？？？
         public static readonly Color FlashHairColor = Color.White;
         public static readonly Color TwoDashesHairColor = Calc.HexToColor("ff6def");
         private float hairFlashTimer;
@@ -293,11 +341,16 @@ namespace Celeste
 
         #endregion
 
+        //构造函数，添加和移除对象
         #region constructor / added / removed
 
+        //玩家属性，位置和精灵模式
         public Player(Vector2 position, PlayerSpriteMode spriteMode)
+            //调用基类的构造函数
             : base(new Vector2((int)position.X, (int)position.Y))
         {
+            //Layer？？？
+            //可能是constant文件里定义的玩家所在图层和持久性标签
             Depth = Depths.Player;
             Tag = Tags.Persistent;
 
@@ -319,6 +372,7 @@ namespace Celeste
             onCollideV = OnCollideV;
 
             // states
+            //玩家状态机
             StateMachine = new StateMachine(23);
             StateMachine.SetCallbacks(StNormal, NormalUpdate, null, NormalBegin, NormalEnd);
             StateMachine.SetCallbacks(StClimb, ClimbUpdate, null, ClimbBegin, ClimbEnd);
