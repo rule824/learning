@@ -11,6 +11,10 @@ namespace Celeste
     public class Player : Actor
     {
         //常量
+        //头发和碰撞框为什么不在此处定义呢？？？
+        //此处是定义全局作用域里不会改变的量，头发和碰撞框在每个level可以不同
+        //{set; private get} => 为了防止外部代码使用该命名空间时候不能更改此变量
+        //readonly 只能赋值和构造函数里才能修改， 所以将其放在Vars的region里
         #region Constants
 
         public static ParticleType P_DashA;
@@ -193,7 +197,6 @@ namespace Celeste
         #endregion
 
         //变量
-        //头发和碰撞框为什么不在此处定义呢？？？
         #region Vars
 
         public Vector2 Speed;
@@ -341,7 +344,8 @@ namespace Celeste
 
         #endregion
 
-        //构造函数，添加和移除对象
+        //构造函数，角色添加/移除后的处理函数
+        //
         #region constructor / added / removed
 
         //玩家属性，位置和精灵模式
@@ -546,6 +550,7 @@ namespace Celeste
             PreviousPosition = Position;
         }
 
+        //进入冥想睡眠状态，用于剧情或谜题解决
         public void StartTempleMirrorVoidSleep()
         {
             Sprite.Play("asleep");
@@ -556,6 +561,8 @@ namespace Celeste
             DummyGravity = false;
         }
 
+        //生命周期回调
+        //清除关卡，音频，触发器等
         public override void Removed(Scene scene)
         {
             base.Removed(scene);
@@ -577,6 +584,12 @@ namespace Celeste
 
         #endregion
 
+        //精灵渲染
+        // Added：通常是在游戏对象或组件被添加到场景中时调用的方法。它用于执行一些初始化任务，例如设置初始状态或配置游戏对象。在此方法中，对象通常可以访问场景和其他相关组件。
+        // Awake：是在对象被创建时立即调用的方法。通常用于执行一些初始化设置，但在对象添加到场景之前调用。因此，它可以用来进行不依赖于场景的初始化工作。
+        // Start：在对象被添加到场景并且所有 Awakes 方法都被调用后立即调用的方法。通常用于进行游戏对象的最终初始化，可以访问场景中的其他对象。Start 方法在对象的生命周期中只调用一次。
+        // Update：是在每一帧（或一定时间间隔）中被调用的方法，用于处理游戏对象的主要逻辑。在 Update 方法中，通常包含了游戏对象的行为、状态更新以及与用户输入的交互逻辑。Update 方法会在每帧中多次调用。
+        // Removed：通常是在游戏对象或组件从场景中移除时被调用的方法。它用于执行一些清理工作，例如释放资源或断开与其他对象的连接。在 Removed 方法中，对象通常无法访问场景或其他对象。
         #region Rendering
 
         public override void Render()
@@ -584,6 +597,7 @@ namespace Celeste
             var was = Sprite.RenderPosition;
             Sprite.RenderPosition = Sprite.RenderPosition.Floor();
 
+            //重生
             if (StateMachine.State == StIntroRespawn)
             {
                 DeathEffect.Draw(Center + deadOffset, Hair.Color, introEase);
@@ -619,6 +633,8 @@ namespace Celeste
                 base.Render();
 
                 // star fly transform
+                // 绘制星星飞行的特效
+                // 透明度逐渐升高
                 if (Sprite.CurrentAnimationID == PlayerSprite.StartStarFly)
                 {
                     var p = (Sprite.CurrentAnimationFrame / (float)Sprite.CurrentAnimationTotalFrames);
@@ -630,6 +646,7 @@ namespace Celeste
                 Sprite.Scale.X *= (int)Facing;
                 if (reflection.IsRendering && FlipInReflection)
                 {
+                    // 类型强制转换
                     Facing = (Facings)(-(int)Facing);
                     Hair.Facing = Facing;
                 }
@@ -638,6 +655,7 @@ namespace Celeste
             Sprite.RenderPosition = was;
         }
 
+        // 调试模式下可视化碰撞框
         public override void DebugRender(Camera camera)
         {
             base.DebugRender(camera);
